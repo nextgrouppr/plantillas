@@ -18,17 +18,12 @@
         }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 15px; font-size: 14px; }
         
-        /* Menú de Navegación Superior */
-        .nav-menu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px; }
-        .nav-btn { background: var(--card); color: var(--text); text-decoration: none; text-align: center; padding: 10px 2px; border-radius: 8px; font-size: 9px; font-weight: bold; border: 1px solid var(--border); text-transform: uppercase; }
-        .nav-btn.active { border-color: var(--accent); background: #001a35; }
-
         .wrapper { display: flex; flex-direction: column; gap: 15px; }
         .sidebar { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; }
         .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
         
         .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        label { display: block; font-size: 10px; color: var(--subtext); margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         
         .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
@@ -46,19 +41,36 @@
         hr { border: 0; border-top: 1px solid #333; margin: 12px 0; }
         .total-row { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
 
+        /* NUEVO: Menú de Navegación Vertical al Final */
+        .nav-footer { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            margin-top: 30px; 
+            padding-bottom: 40px; 
+        }
+        .nav-btn { 
+            background: #161616; 
+            color: var(--subtext); 
+            text-decoration: none; 
+            text-align: center; 
+            padding: 12px; 
+            border-radius: 10px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            border: 1px solid var(--border); 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .nav-btn.active { display: none; } /* Ocultamos el botón de la página actual */
+        .nav-btn:active { background: var(--accent); color: #fff; }
+
         @media (min-width: 768px) {
             .wrapper { grid-template-columns: 380px 1fr; display: grid; }
         }
     </style>
 </head>
 <body>
-
-<div class="nav-menu">
-    <a href="index.html" class="nav-btn active">Rentas</a>
-    <a href="fix-and-flip.html" class="nav-btn">Fix&Flip</a>
-    <a href="brrr.html" class="nav-btn">BRRR</a>
-    <a href="hard-money-flip.html" class="nav-btn">HardMoney</a>
-</div>
 
 <div class="wrapper">
     <div class="sidebar">
@@ -100,7 +112,7 @@
         <div class="main-box">
             <span class="section-title">Estado de Resultados</span>
             <div class="row-flex"><span>(+) Ingreso Bruto:</span> <b class="positive" id="r_gross">--</b></div>
-            <div class="row-flex"><span class="negative">(-) Vacancia/Maint/Mgmt:</span> <span class="negative" id="r_opex_pct">--</span></div>
+            <div class="row-flex"><span class="negative">(-) OpEx Variable:</span> <span class="negative" id="r_opex_pct">--</span></div>
             <div class="row-flex"><span class="negative">(-) Seguros / CRIM:</span> <span class="negative" id="r_escrow">--</span></div>
             <hr>
             <div class="row-flex" style="font-weight:bold;"><span>NOI:</span> <b id="r_noi">--</b></div>
@@ -112,6 +124,14 @@
             <div class="chart-container"><canvas id="rentChart"></canvas></div>
             <hr>
             <div class="row-flex"><span>ROI Anual (CoC):</span> <b id="r_coc" class="positive">--%</b></div>
+        </div>
+
+        <div class="nav-footer">
+            <span class="section-title" style="text-align: center; border: none;">Otras Calculadoras</span>
+            <a href="index.html" class="nav-btn active">Rentas</a>
+            <a href="fix-and-flip.html" class="nav-btn">Calculadora Fix & Flip</a>
+            <a href="brrr.html" class="nav-btn">Calculadora BRRR</a>
+            <a href="hard-money-flip.html" class="nav-btn">Calculadora Hard Money</a>
         </div>
     </div>
 </div>
