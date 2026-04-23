@@ -3,194 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RE Master v5.5 - Pro Financial Status</title>
+    <title>RE Master v5.5 - Menu</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RE Master">
     <link rel="apple-touch-icon" href="icono.png">
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #050505; --card: #111; --border: #222; --accent: #0070f3;
-            --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
+            --bg: #000; --card: #111; --border: #222; --accent: #0070f3;
+            --text: #eaeaea; --subtext: #888;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 15px; font-size: 14px; }
-        
-        .wrapper { display: flex; flex-direction: column; gap: 15px; }
-        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; }
-        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
-        
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 10px; color: var(--subtext); margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
-        
-        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; }
-        .metric-val { font-size: 18px; font-weight: 900; display: block; margin-top: 5px; }
-        .metric-label { font-size: 9px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
-        
-        .main-box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 15px; }
-        .chart-container { height: 220px; position: relative; }
-
-        .row-flex { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a1a; }
-        .positive { color: var(--green); }
-        .negative { color: var(--red); }
-        
-        hr { border: 0; border-top: 1px solid #333; margin: 12px 0; }
-        .total-row { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
-
-        /* NUEVO: Menú de Navegación Vertical al Final */
-        .nav-footer { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-            margin-top: 30px; 
-            padding-bottom: 40px; 
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
-        .nav-btn { 
-            background: #161616; 
-            color: var(--subtext); 
-            text-decoration: none; 
-            text-align: center; 
-            padding: 12px; 
-            border-radius: 10px; 
-            font-size: 11px; 
-            font-weight: 600; 
-            border: 1px solid var(--border); 
+
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        .header p { color: var(--subtext); font-size: 14px; margin-top: 5px; text-transform: uppercase; letter-spacing: 2px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .menu-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .menu-card:active {
+            transform: scale(0.97);
+            background: #1a1a1a;
+            border-color: var(--accent);
+        }
+
+        .icon {
+            font-size: 30px;
+            width: 50px;
+            height: 50px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        .info { display: flex; flex-direction: column; }
+        .info b { font-size: 18px; font-weight: 700; }
+        .info span { font-size: 12px; color: var(--subtext); margin-top: 2px; }
+
+        .footer-logo {
+            margin-top: 50px;
+            font-size: 10px;
+            color: #333;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .nav-btn.active { display: none; } /* Ocultamos el botón de la página actual */
-        .nav-btn:active { background: var(--accent); color: #fff; }
-
-        @media (min-width: 768px) {
-            .wrapper { grid-template-columns: 380px 1fr; display: grid; }
         }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <div class="sidebar">
-        <span class="section-title">Ingresos Brutos</span>
-        <div class="input-group">
-            <label>RENTA MENSUAL TOTAL ($)</label>
-            <input id="grossIncome" type="number" value="2500" oninput="calc()" style="border-color: var(--green); color: var(--green); font-weight: bold;">
-        </div>
-
-        <span class="section-title">Costos de Adquisición</span>
-        <div class="input-group"><label>Precio de Compra</label><input id="price" type="number" value="180000" oninput="calc()"></div>
-        <div class="input-group"><label>Remodelación / Rehab</label><input id="rehab" type="number" value="20000" oninput="calc()"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="input-group"><label>Pronto %</label><input id="down" type="number" value="20" oninput="calc()"></div>
-            <div class="input-group"><label>Interés %</label><input id="rate" type="number" value="7.5" oninput="calc()"></div>
-        </div>
-
-        <span class="section-title">Gastos Fijos (Monthly)</span>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="input-group"><label>Hazard</label><input id="hazard" type="number" value="100" oninput="calc()"></div>
-            <div class="input-group"><label>CRIM</label><input id="crim" type="number" value="120" oninput="calc()"></div>
-        </div>
-
-        <span class="section-title">Reservas %</span>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-            <div class="input-group"><label>Vacancia</label><input id="vac_pct" type="number" value="5" oninput="calc()"></div>
-            <div class="input-group"><label>Maint.</label><input id="maint_pct" type="number" value="5" oninput="calc()"></div>
-            <div class="input-group"><label>Mgmt.</label><input id="mgmt_pct" type="number" value="10" oninput="calc()"></div>
-        </div>
+    <div class="header">
+        <h1>RE Master</h1>
+        <p>Real Estate Suite v5.5</p>
     </div>
 
-    <div class="main-content">
-        <div class="dashboard-grid">
-            <div class="metric-card"><span class="metric-label">Inversión</span><span id="m_total_invest" class="metric-val">--</span></div>
-            <div class="metric-card"><span class="metric-label">Cash Flow</span><span id="m_cf" class="metric-val">--</span></div>
-            <div class="metric-card"><span class="metric-label">Recuperación</span><span id="m_recovery" class="metric-val">--</span></div>
-        </div>
+    <div class="menu-grid">
+        <a href="rentas.html" class="menu-card">
+            <div class="icon">💰</div>
+            <div class="info">
+                <b>Cash Flow & Rentas</b>
+                <span>Análisis de ingresos pasivos</span>
+            </div>
+        </a>
 
-        <div class="main-box">
-            <span class="section-title">Estado de Resultados</span>
-            <div class="row-flex"><span>(+) Ingreso Bruto:</span> <b class="positive" id="r_gross">--</b></div>
-            <div class="row-flex"><span class="negative">(-) OpEx Variable:</span> <span class="negative" id="r_opex_pct">--</span></div>
-            <div class="row-flex"><span class="negative">(-) Seguros / CRIM:</span> <span class="negative" id="r_escrow">--</span></div>
-            <hr>
-            <div class="row-flex" style="font-weight:bold;"><span>NOI:</span> <b id="r_noi">--</b></div>
-            <div class="row-flex"><span class="negative">(-) Hipoteca:</span> <span class="negative" id="r_pi">--</span></div>
-            <div class="row-flex total-row"><span>CASH FLOW:</span> <span id="r_cf">--</span></div>
-        </div>
+        <a href="fix-and-flip.html" class="menu-card">
+            <div class="icon">🔨</div>
+            <div class="info">
+                <b>Fix & Flip</b>
+                <span>Compra, remodelación y venta</span>
+            </div>
+        </a>
 
-        <div class="main-box">
-            <div class="chart-container"><canvas id="rentChart"></canvas></div>
-            <hr>
-            <div class="row-flex"><span>ROI Anual (CoC):</span> <b id="r_coc" class="positive">--%</b></div>
-        </div>
+        <a href="brrr.html" class="menu-card">
+            <div class="icon">🔄</div>
+            <div class="info">
+                <b>Método BRRR</b>
+                <span>Refinanciamiento y escala</span>
+            </div>
+        </a>
 
-        <div class="nav-footer">
-            <span class="section-title" style="text-align: center; border: none;">Otras Calculadoras</span>
-            <a href="index.html" class="nav-btn active">Rentas</a>
-            <a href="fix-and-flip.html" class="nav-btn">Calculadora Fix & Flip</a>
-            <a href="brrr.html" class="nav-btn">Calculadora BRRR</a>
-            <a href="hard-money-flip.html" class="nav-btn">Calculadora Hard Money</a>
-        </div>
+        <a href="hard-money-flip.html" class="menu-card">
+            <div class="icon">🏦</div>
+            <div class="info">
+                <b>Hard Money Flip</b>
+                <span>Cálculo con capital privado</span>
+            </div>
+        </a>
     </div>
-</div>
 
-<script>
-let chart = null;
-function v(id){ return parseFloat(document.getElementById(id).value)||0; }
-function f(n){ return "$" + n.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+    <div class="footer-logo">Rodriguez Rivera Rivera Master v5.5</div>
 
-function calc() {
-    const gross = v("grossIncome");
-    const price = v("price");
-    const rehab = v("rehab");
-    const downAmt = price * (v("down")/100);
-    const loan = price - downAmt;
-    const rate = (v("rate")/100)/12;
-    
-    const pi = loan > 0 ? (loan * rate * Math.pow(1+rate, 360)) / (Math.pow(1+rate, 360) - 1) : 0;
-    const opex_pct = gross * ((v("vac_pct") + v("maint_pct") + v("mgmt_pct")) / 100);
-    const escrow = v("hazard") + v("crim");
-    
-    const noi = gross - opex_pct - escrow;
-    const cf = noi - pi;
-    const totalInvested = downAmt + rehab + (price * 0.04);
-    const coc = totalInvested > 0 ? ((cf * 12) / totalInvested) * 100 : 0;
-    const recovery = (cf > 0) ? (totalInvested / (cf * 12)) : 0;
-
-    document.getElementById("m_total_invest").innerText = f(totalInvested);
-    document.getElementById("m_cf").innerText = f(cf);
-    document.getElementById("m_recovery").innerText = recovery > 0 ? recovery.toFixed(1) + " Años" : "∞";
-    
-    document.getElementById("r_gross").innerText = f(gross);
-    document.getElementById("r_opex_pct").innerText = "-" + f(opex_pct);
-    document.getElementById("r_escrow").innerText = "-" + f(escrow);
-    document.getElementById("r_noi").innerText = f(noi);
-    document.getElementById("r_pi").innerText = "-" + f(pi);
-    document.getElementById("r_cf").innerText = f(cf);
-    document.getElementById("r_coc").innerText = coc.toFixed(1) + "%";
-
-    updateChart(pi, escrow, opex_pct, cf);
-}
-
-function updateChart(pi, escrow, opex, cf) {
-    const ctx = document.getElementById('rentChart').getContext('2d');
-    if(chart) chart.destroy();
-    chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Hipoteca', 'Seguros', 'OpEx', 'Cash Flow'],
-            datasets: [{
-                data: [pi, escrow, opex, cf > 0 ? cf : 0],
-                backgroundColor: ['#0070f3', '#ff4d4d', '#555', '#00ff88'],
-                borderWidth: 0
-            }]
-        },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888', font: {size: 10} } } } }
-    });
-}
-calc();
-</script>
 </body>
 </html>
