@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RE Master v5.5 - Fix & Flip</title>
+    <title>RE Master v5.5 - Pro Financial Status</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="RE Master">
+    <link rel="apple-touch-icon" href="icono.png">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,77 +16,102 @@
             --bg: #050505; --card: #111; --border: #222; --accent: #0070f3;
             --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
         }
-        body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; margin: 0; padding: 15px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 15px; font-size: 14px; }
         
-        /* Menú de Navegación */
-        .nav-menu { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .nav-btn { background: var(--card); color: var(--text); text-decoration: none; text-align: center; padding: 10px 2px; border-radius: 8px; font-size: 10px; font-weight: bold; border: 1px solid var(--border); text-transform: uppercase; }
+        /* Menú de Navegación Superior */
+        .nav-menu { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px; }
+        .nav-btn { background: var(--card); color: var(--text); text-decoration: none; text-align: center; padding: 10px 2px; border-radius: 8px; font-size: 9px; font-weight: bold; border: 1px solid var(--border); text-transform: uppercase; }
         .nav-btn.active { border-color: var(--accent); background: #001a35; }
 
         .wrapper { display: flex; flex-direction: column; gap: 15px; }
-        .sidebar, .main-content { display: flex; flex-direction: column; gap: 15px; }
-        .section-title { font-size: 11px; color: var(--subtext); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 10px; }
+        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
         
-        .input-group { margin-bottom: 10px; }
-        label { display: block; font-size: 10px; color: var(--subtext); margin-bottom: 4px; }
-        input { width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 6px; padding: 12px; color: #fff; font-size: 16px; box-sizing: border-box; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 10px; text-align: center; }
-        .metric-label { font-size: 9px; color: var(--subtext); text-transform: uppercase; }
-        .metric-val { font-size: 16px; font-weight: bold; display: block; margin-top: 4px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 12px; border-radius: 12px; text-align: center; }
+        .metric-val { font-size: 18px; font-weight: 900; display: block; margin-top: 5px; }
+        .metric-label { font-size: 9px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
+        
+        .main-box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 15px; }
+        .chart-container { height: 220px; position: relative; }
 
-        .main-box { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; }
-        .row-flex { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
-        hr { border: 0; border-top: 1px solid var(--border); margin: 12px 0; }
-        .chart-container { height: 160px; position: relative; }
+        .row-flex { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1a1a1a; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
         
-        @media (min-width: 768px) { .wrapper { flex-direction: row; } .sidebar { width: 320px; } .main-content { flex: 1; } }
+        hr { border: 0; border-top: 1px solid #333; margin: 12px 0; }
+        .total-row { font-size: 1.1rem; font-weight: 900; margin-top: 5px; }
+
+        @media (min-width: 768px) {
+            .wrapper { grid-template-columns: 380px 1fr; display: grid; }
+        }
     </style>
 </head>
 <body>
 
 <div class="nav-menu">
-    <a href="index.html" class="nav-btn active">Fix & Flip</a>
+    <a href="index.html" class="nav-btn active">Rentas</a>
+    <a href="fix-and-flip.html" class="nav-btn">Fix&Flip</a>
     <a href="brrr.html" class="nav-btn">BRRR</a>
-    <a href="hard-money-flip.html" class="nav-btn">Hard Money</a>
+    <a href="hard-money-flip.html" class="nav-btn">HardMoney</a>
 </div>
 
 <div class="wrapper">
     <div class="sidebar">
-        <span class="section-title">Análisis de Compra</span>
-        <div class="input-group"><label>Precio de Compra ($)</label><input id="price" type="number" value="150000" oninput="calc()"></div>
-        <div class="input-group"><label>Costo de Reparaciones ($)</label><input id="rehab" type="number" value="35000" oninput="calc()"></div>
-        <div class="input-group"><label>Valor de Venta Final (ARV) ($)</label><input id="arv" type="number" value="250000" oninput="calc()" style="color:var(--green); border-color:var(--green);"></div>
-        
-        <span class="section-title">Costos Operativos</span>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="input-group"><label>Cierre Compra (%)</label><input id="close_buy" type="number" value="3" oninput="calc()"></div>
-            <div class="input-group"><label>Cierre Venta (%)</label><input id="close_sell" type="number" value="6" oninput="calc()"></div>
+        <span class="section-title">Ingresos Brutos</span>
+        <div class="input-group">
+            <label>RENTA MENSUAL TOTAL ($)</label>
+            <input id="grossIncome" type="number" value="2500" oninput="calc()" style="border-color: var(--green); color: var(--green); font-weight: bold;">
         </div>
-        <div class="input-group"><label>Holding Costs (Meses)</label><input id="months" type="number" value="6" oninput="calc()"></div>
+
+        <span class="section-title">Costos de Adquisición</span>
+        <div class="input-group"><label>Precio de Compra</label><input id="price" type="number" value="180000" oninput="calc()"></div>
+        <div class="input-group"><label>Remodelación / Rehab</label><input id="rehab" type="number" value="20000" oninput="calc()"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Pronto %</label><input id="down" type="number" value="20" oninput="calc()"></div>
+            <div class="input-group"><label>Interés %</label><input id="rate" type="number" value="7.5" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">Gastos Fijos (Monthly)</span>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Hazard</label><input id="hazard" type="number" value="100" oninput="calc()"></div>
+            <div class="input-group"><label>CRIM</label><input id="crim" type="number" value="120" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">Reservas %</span>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+            <div class="input-group"><label>Vacancia</label><input id="vac_pct" type="number" value="5" oninput="calc()"></div>
+            <div class="input-group"><label>Maint.</label><input id="maint_pct" type="number" value="5" oninput="calc()"></div>
+            <div class="input-group"><label>Mgmt.</label><input id="mgmt_pct" type="number" value="10" oninput="calc()"></div>
+        </div>
     </div>
 
     <div class="main-content">
         <div class="dashboard-grid">
-            <div class="metric-card"><span class="metric-label">Inversión</span><span id="m_total" class="metric-val">--</span></div>
-            <div class="metric-card"><span class="metric-label">Ganancia</span><span id="m_profit" class="metric-val" style="color:var(--green)">--</span></div>
-            <div class="metric-card"><span class="metric-label">ROI %</span><span id="m_roi" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">Inversión</span><span id="m_total_invest" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">Cash Flow</span><span id="m_cf" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">Recuperación</span><span id="m_recovery" class="metric-val">--</span></div>
         </div>
 
         <div class="main-box">
-            <span class="section-title">Resumen de Operación</span>
-            <div class="row-flex"><span>(+) Valor de Venta (ARV):</span> <b id="r_arv">--</b></div>
-            <div class="row-flex"><span>(-) Precio Compra:</span> <span id="r_price">--</span></div>
-            <div class="row-flex"><span>(-) Reparaciones:</span> <span id="r_rehab">--</span></div>
-            <div class="row-flex"><span>(-) Costos de Cierre:</span> <span id="r_closing">--</span></div>
+            <span class="section-title">Estado de Resultados</span>
+            <div class="row-flex"><span>(+) Ingreso Bruto:</span> <b class="positive" id="r_gross">--</b></div>
+            <div class="row-flex"><span class="negative">(-) Vacancia/Maint/Mgmt:</span> <span class="negative" id="r_opex_pct">--</span></div>
+            <div class="row-flex"><span class="negative">(-) Seguros / CRIM:</span> <span class="negative" id="r_escrow">--</span></div>
             <hr>
-            <div class="row-flex" style="font-size:1.2rem; font-weight:bold;"><span>GANANCIA NETA:</span> <span id="r_profit" style="color:var(--green)">--</span></div>
+            <div class="row-flex" style="font-weight:bold;"><span>NOI:</span> <b id="r_noi">--</b></div>
+            <div class="row-flex"><span class="negative">(-) Hipoteca:</span> <span class="negative" id="r_pi">--</span></div>
+            <div class="row-flex total-row"><span>CASH FLOW:</span> <span id="r_cf">--</span></div>
         </div>
 
         <div class="main-box">
-            <span class="section-title">Distribución de Capital</span>
-            <div class="chart-container"><canvas id="flipChart"></canvas></div>
+            <div class="chart-container"><canvas id="rentChart"></canvas></div>
+            <hr>
+            <div class="row-flex"><span>ROI Anual (CoC):</span> <b id="r_coc" class="positive">--%</b></div>
         </div>
     </div>
 </div>
@@ -96,44 +122,52 @@ function v(id){ return parseFloat(document.getElementById(id).value)||0; }
 function f(n){ return "$" + n.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
 
 function calc() {
-    const arv = v("arv");
+    const gross = v("grossIncome");
     const price = v("price");
     const rehab = v("rehab");
-    const closeBuy = price * (v("close_buy")/100);
-    const closeSell = arv * (v("close_sell")/100);
-    const totalClosing = closeBuy + closeSell;
+    const downAmt = price * (v("down")/100);
+    const loan = price - downAmt;
+    const rate = (v("rate")/100)/12;
     
-    const totalInvested = price + rehab + closeBuy;
-    const profit = arv - price - rehab - totalClosing;
-    const roi = totalInvested > 0 ? (profit / totalInvested) * 100 : 0;
-
-    document.getElementById("m_total").innerText = f(totalInvested);
-    document.getElementById("m_profit").innerText = f(profit);
-    document.getElementById("m_roi").innerText = roi.toFixed(1) + "%";
+    const pi = loan > 0 ? (loan * rate * Math.pow(1+rate, 360)) / (Math.pow(1+rate, 360) - 1) : 0;
+    const opex_pct = gross * ((v("vac_pct") + v("maint_pct") + v("mgmt_pct")) / 100);
+    const escrow = v("hazard") + v("crim");
     
-    document.getElementById("r_arv").innerText = f(arv);
-    document.getElementById("r_price").innerText = "-" + f(price);
-    document.getElementById("r_rehab").innerText = "-" + f(rehab);
-    document.getElementById("r_closing").innerText = "-" + f(totalClosing);
-    document.getElementById("r_profit").innerText = f(profit);
+    const noi = gross - opex_pct - escrow;
+    const cf = noi - pi;
+    const totalInvested = downAmt + rehab + (price * 0.04);
+    const coc = totalInvested > 0 ? ((cf * 12) / totalInvested) * 100 : 0;
+    const recovery = (cf > 0) ? (totalInvested / (cf * 12)) : 0;
 
-    updateChart(price, rehab, totalClosing, profit);
+    document.getElementById("m_total_invest").innerText = f(totalInvested);
+    document.getElementById("m_cf").innerText = f(cf);
+    document.getElementById("m_recovery").innerText = recovery > 0 ? recovery.toFixed(1) + " Años" : "∞";
+    
+    document.getElementById("r_gross").innerText = f(gross);
+    document.getElementById("r_opex_pct").innerText = "-" + f(opex_pct);
+    document.getElementById("r_escrow").innerText = "-" + f(escrow);
+    document.getElementById("r_noi").innerText = f(noi);
+    document.getElementById("r_pi").innerText = "-" + f(pi);
+    document.getElementById("r_cf").innerText = f(cf);
+    document.getElementById("r_coc").innerText = coc.toFixed(1) + "%";
+
+    updateChart(pi, escrow, opex_pct, cf);
 }
 
-function updateChart(p, r, c, pr) {
-    const ctx = document.getElementById('flipChart').getContext('2d');
+function updateChart(pi, escrow, opex, cf) {
+    const ctx = document.getElementById('rentChart').getContext('2d');
     if(chart) chart.destroy();
     chart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Compra', 'Rehab', 'Cierre', 'Ganancia'],
+            labels: ['Hipoteca', 'Seguros', 'OpEx', 'Cash Flow'],
             datasets: [{
-                data: [p, r, c, pr > 0 ? pr : 0],
-                backgroundColor: ['#0070f3', '#555', '#ffcc00', '#00ff88'],
+                data: [pi, escrow, opex, cf > 0 ? cf : 0],
+                backgroundColor: ['#0070f3', '#ff4d4d', '#555', '#00ff88'],
                 borderWidth: 0
             }]
         },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } } }
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888', font: {size: 10} } } } }
     });
 }
 calc();
