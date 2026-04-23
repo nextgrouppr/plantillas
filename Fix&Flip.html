@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix & Flip Specialist v6.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #050505; --card: #111; --border: #222; --accent: #ff8800;
+            --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; font-size: 14px; }
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        
+        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; height: fit-content; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; }
+        .metric-val { font-size: 24px; font-weight: 900; display: block; margin-top: 5px; }
+        .metric-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
+        
+        .main-box { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; margin-bottom: 20px; }
+        .chart-container { height: 280px; position: relative; }
+
+        .row-flex { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        .warning { color: var(--yellow); }
+        
+        hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
+        .total-row { font-size: 1.4rem; font-weight: 900; margin-top: 10px; border-top: 2px solid #333; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <span class="section-title">1. Compra y Rehab</span>
+        <div class="input-group"><label>PRECIO DE VENTA FINAL (ARV)</label>
+            <input id="arv" type="number" value="300000" oninput="calc()" style="border-color: var(--green); color: var(--green); font-weight: bold;">
+        </div>
+        <div class="input-group"><label>Precio de Compra</label><input id="price" type="number" value="180000" oninput="calc()"></div>
+        <div class="input-group"><label>Presupuesto de Obra</label><input id="rehab" type="number" value="40000" oninput="calc()"></div>
+        
+        <span class="section-title">2. Holding (Costos Mensuales)</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Meses de Obra</label><input id="months" type="number" value="6" oninput="calc()"></div>
+            <div class="input-group"><label>Servicios/Seguro</label><input id="holding_monthly" type="number" value="300" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">3. Gastos de Cierre y Venta</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Cierre Compra %</label><input id="buy_close_pct" type="number" value="3" oninput="calc()"></div>
+            <div class="input-group"><label>Comisión Realtor %</label><input id="realtor_pct" type="number" value="5" oninput="calc()"></div>
+        </div>
+        <div class="input-group"><label>Cierre Venta (Gastos Legales)</label><input id="sell_close_fix" type="number" value="3000" oninput="calc()"></div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="metric-card"><span class="metric-label">Inversión de Bolsillo</span><span id="m_total_invest" class="metric-val" style="color:#fff">--</span></div>
+            <div class="metric-card"><span class="metric-label">Ganancia Neta</span><span id="m_profit" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">ROI del Proyecto</span><span id="m_roi" class="metric-val">--</span></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+            <div class="main-box">
+                <span class="section-title">Análisis del Negocio (Fix & Flip)</span>
+                
+                <div class="row-flex"><span>(+) Precio de Venta (ARV):</span> <b class="positive" id="r_arv">--</b></div>
+                <div class="row-flex"><span class="negative">(-) Precio de Compra:</span> <span class="negative" id="r_price">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Costo de Remodelación:</span> <span class="negative" id="r_rehab">--</span></div>
+                
+                <hr>
+                <div class="row-flex"><span class="negative">(-) Gastos Cierre Compra:</span> <span class="negative" id="r_buy_close">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Holding Costs (Totales):</span> <span class="negative" id="r_holding_total">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Comisión Realtor:</span> <span class="negative" id="r_realtor">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Gastos Cierre Venta:</span> <span class="negative" id="r_sell_close">--</span></div>
+                
+                <div class="row-flex total-row">
+                    <span>GANANCIA NETA:</span> 
+                    <span id="r_profit">--</span>
+                </div>
+            </div>
+
+            <div class="main-box">
+                <span class="section-title">Distribución de Costos vs Ganancia</span>
+                <div class="chart-container">
+                    <canvas id="flipChart"></canvas>
+                </div>
+                <hr>
+                <div class="row-flex"><span>ROI Anualizado:</span> <b id="r_roi_annual" class="positive">--%</b></div>
+            </div>
+        </div>
+
+        <div class="main-box" style="padding: 15px 25px; border-left: 5px solid var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusText" style="font-weight:bold; font-size:0.9rem; text-transform: uppercase;">Calculando viabilidad del flip...</span>
+                <span style="color:var(--subtext)">Punto de equilibrio: <b id="r_breakeven" style="color:#fff">--</b></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chart = null;
+
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+function f(n){ return "$" + n.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function calc() {
+    const arv = v("arv");
+    const price = v("price");
+    const rehab = v("rehab");
+    const months = v("months");
+    
+    // Gastos
+    const buyClosing = price * (v("buy_close_pct")/100);
+    const holdingTotal = months * v("holding_monthly");
+    const realtorComm = arv * (v("realtor_pct")/100);
+    const sellClosing = v("sell_close_fix");
+    
+    const totalCosts = price + rehab + buyClosing + holdingTotal + realtorComm + sellClosing;
+    const profit = arv - totalCosts;
+    
+    // Inversión (Asumiendo compra en CASH para este modelo, o puedes ajustar el capital)
+    const totalInvested = price + rehab + buyClosing + holdingTotal;
+    const roi = totalInvested > 0 ? (profit / totalInvested) * 100 : 0;
+    const roiAnnual = (roi / months) * 12;
+
+    // --- UI UPDATES ---
+    document.getElementById("m_total_invest").innerText = f(totalInvested);
+    document.getElementById("r_arv").innerText = f(arv);
+    document.getElementById("r_price").innerText = "-" + f(price);
+    document.getElementById("r_rehab").innerText = "-" + f(rehab);
+    document.getElementById("r_buy_close").innerText = "-" + f(buyClosing);
+    document.getElementById("r_holding_total").innerText = "-" + f(holdingTotal);
+    document.getElementById("r_realtor").innerText = "-" + f(realtorComm);
+    document.getElementById("r_sell_close").innerText = "-" + f(sellClosing);
+    document.getElementById("r_breakeven").innerText = f(totalCosts);
+    document.getElementById("r_roi_annual").innerText = roiAnnual.toFixed(1) + "%";
+
+    // Lógica Ganancia Neta (Color)
+    const pElement = document.getElementById("r_profit");
+    const pMetric = document.getElementById("m_profit");
+    pElement.innerText = f(profit);
+    pMetric.innerText = f(profit);
+    
+    if(profit >= 40000) {
+        pElement.className = "positive";
+        pMetric.style.color = "var(--green)";
+        document.getElementById("statusText").innerText = "🔥 ¡HOME RUN! Este flip tiene un margen excelente.";
+    } else if(profit >= 20000) {
+        pElement.className = "warning";
+        pMetric.style.color = "var(--yellow)";
+        document.getElementById("statusText").innerText = "✅ BUEN NEGOCIO: Margen sólido para trabajar.";
+    } else {
+        pElement.className = "negative";
+        pMetric.style.color = "var(--red)";
+        document.getElementById("statusText").innerText = "⚠️ RIESGOSO: El margen es muy bajo para los imprevistos.";
+    }
+
+    // Lógica ROI Proyecto
+    document.getElementById("m_roi").innerText = roi.toFixed(1) + "%";
+    document.getElementById("m_roi").style.color = roi > 15 ? "var(--green)" : "var(--red)";
+
+    updateChart(price, rehab, (buyClosing + holdingTotal + realtorComm + sellClosing), profit);
+}
+
+function updateChart(price, rehab, expenses, profit) {
+    const ctx = document.getElementById('flipChart').getContext('2d');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Compra', 'Rehab', 'Gastos Venta/Hold', 'Ganancia'],
+            datasets: [{
+                data: [price, rehab, expenses, profit > 0 ? profit : 0],
+                backgroundColor: ['#333', '#555', '#ff4d4d', '#00ff88'],
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } } 
+        }
+    });
+}
+
+calc();
+</script>
+</body>
+</html>

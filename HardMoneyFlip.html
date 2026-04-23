@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hard Money Flip Specialist v6.5</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #050505; --card: #111; --border: #222; --accent: #ff8800;
+            --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; font-size: 13px; }
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        
+        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; height: fit-content; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 10px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 10px; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; }
+        .metric-val { font-size: 22px; font-weight: 900; display: block; margin-top: 5px; }
+        .metric-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
+        
+        .main-box { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 20px; }
+        .chart-container { height: 250px; position: relative; }
+
+        .row-flex { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        .warning { color: var(--yellow); }
+        
+        hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
+        .total-row { font-size: 1.4rem; font-weight: 900; margin-top: 10px; border-top: 2px solid #333; padding-top: 15px; }
+        .highlight { background: rgba(255, 136, 0, 0.1); border-radius: 8px; padding: 10px; border: 1px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <span class="section-title">1. Negocio y ARV</span>
+        <div class="input-group"><label>PRECIO VENTA FINAL (ARV)</label><input id="arv" type="number" value="300000" oninput="calc()"></div>
+        <div class="input-group"><label>Precio Compra</label><input id="price" type="number" value="180000" oninput="calc()"></div>
+        <div class="input-group"><label>Remodelación (Rehab)</label><input id="rehab" type="number" value="50000" oninput="calc()"></div>
+        
+        <span class="section-title">2. Hard Money Loan</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Financiamiento %</label><input id="ltc" type="number" value="85" oninput="calc()"></div>
+            <div class="input-group"><label>Interés Anual %</label><input id="hm_rate" type="number" value="12" oninput="calc()"></div>
+        </div>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Points (Fee %)</label><input id="points" type="number" value="2" oninput="calc()"></div>
+            <div class="input-group"><label>Meses Proyecto</label><input id="months" type="number" value="6" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">3. Otros Gastos</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Cierre Venta %</label><input id="sell_close_pct" type="number" value="6" oninput="calc()"></div>
+            <div class="input-group"><label>Holding (Agua/Luz)</label><input id="holding_fix" type="number" value="250" oninput="calc()"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="metric-card"><span class="metric-label">Cash out of Pocket</span><span id="m_cash_in" class="metric-val" style="color:var(--yellow)">--</span></div>
+            <div class="metric-card"><span class="metric-label">Ganancia Neta</span><span id="m_profit" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">ROI (Cash on Cash)</span><span id="m_roi" class="metric-val">--</span></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+            <div class="main-box">
+                <span class="section-title">Estructura del Préstamo Hard Money</span>
+                <div class="row-flex"><span>Monto del Préstamo:</span> <b id="r_loan_amt">--</b></div>
+                <div class="row-flex"><span>Points al Cierre:</span> <b class="negative" id="r_points_cost">--</b></div>
+                <div class="row-flex"><span>Interés Mensual:</span> <b class="negative" id="r_hm_monthly">--</b></div>
+                
+                <hr>
+                <span class="section-title">Estado de Resultados (Financiado)</span>
+                <div class="row-flex"><span>(+) Precio de Venta (ARV):</span> <b class="positive" id="r_arv">--</b></div>
+                <div class="row-flex"><span>(-) Liquidación Préstamo:</span> <span class="negative" id="r_loan_payoff">--</span></div>
+                <div class="row-flex"><span>(-) Gastos de Venta (Realtor/Cierre):</span> <span class="negative" id="r_selling_costs">--</span></div>
+                <div class="row-flex"><span>(-) Reembolso Cash Inicial:</span> <span class="negative" id="r_cash_refund">--</span></div>
+                
+                <div class="row-flex total-row">
+                    <span>PROFIT NETO:</span> 
+                    <span id="r_profit">--</span>
+                </div>
+            </div>
+
+            <div class="main-box">
+                <span class="section-title">Distribución de Inversión Inicial</span>
+                <div class="chart-container">
+                    <canvas id="flipChart"></canvas>
+                </div>
+                <hr>
+                <div class="highlight">
+                    <div class="row-flex" style="border:none"><span>Tu Inversión (Down + Rehab Gap + Fees):</span> <b id="r_total_cash">--</b></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-box" style="padding: 15px 25px; border-left: 5px solid var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusText" style="font-weight:bold; font-size:0.9rem;">Analizando apalancamiento...</span>
+                <span style="color:var(--subtext)">ROI Anualizado: <b id="r_roi_annual" style="color:#fff">--</b></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chart = null;
+
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+function f(n){ return "$" + n.toLocaleString('en-US', {maximumFractionDigits:0}); }
+
+function calc() {
+    const arv = v("arv");
+    const price = v("price");
+    const rehab = v("rehab");
+    const months = v("months");
+    
+    // 1. Lógica del Préstamo
+    const ltcPct = v("ltc") / 100;
+    const loanAmt = (price + rehab) * ltcPct;
+    const pointsCost = loanAmt * (v("points") / 100);
+    const monthlyInterest = (loanAmt * (v("hm_rate") / 100)) / 12;
+    const totalHoldingInterest = monthlyInterest * months;
+    
+    // 2. Cash Requerido (Lo que tú pones)
+    const purchaseDown = price - (price * ltcPct);
+    const rehabGap = rehab - (rehab * ltcPct);
+    const closingFeesEst = price * 0.03;
+    const totalCashIn = purchaseDown + rehabGap + pointsCost + closingFeesEst + (v("holding_fix") * months);
+
+    // 3. Gastos de Venta
+    const sellingCosts = arv * (v("sell_close_pct") / 100);
+
+    // 4. Profit Final
+    // (ARV) - (Préstamo) - (Intereses acumulados) - (Gastos Venta) - (Tu Cash inicial)
+    const profit = arv - loanAmt - totalHoldingInterest - sellingCosts - totalCashIn;
+    const roi = (profit / totalCashIn) * 100;
+    const roiAnnual = (roi / months) * 12;
+
+    // --- UI ---
+    document.getElementById("m_cash_in").innerText = f(totalCashIn);
+    document.getElementById("r_loan_amt").innerText = f(loanAmt);
+    document.getElementById("r_points_cost").innerText = f(pointsCost);
+    document.getElementById("r_hm_monthly").innerText = f(monthlyInterest) + "/mes";
+    document.getElementById("r_arv").innerText = f(arv);
+    document.getElementById("r_loan_payoff").innerText = "-" + f(loanAmt + totalHoldingInterest);
+    document.getElementById("r_selling_costs").innerText = "-" + f(sellingCosts);
+    document.getElementById("r_cash_refund").innerText = "-" + f(totalCashIn);
+    document.getElementById("r_total_cash").innerText = f(totalCashIn);
+    document.getElementById("r_roi_annual").innerText = roiAnnual.toFixed(1) + "%";
+
+    const pElement = document.getElementById("r_profit");
+    const pMetric = document.getElementById("m_profit");
+    pElement.innerText = f(profit);
+    pMetric.innerText = f(profit);
+
+    // Semáforos de Profit
+    if(profit >= 40000) { pMetric.style.color = "var(--green)"; pElement.className = "positive"; document.getElementById("statusText").innerText = "🚀 FLIP MAESTRO: Gran margen y buen apalancamiento."; }
+    else if(profit >= 20000) { pMetric.style.color = "var(--yellow)"; pElement.className = "warning"; document.getElementById("statusText").innerText = "✅ DECENTE: El interés del Hard Money es alto pero el negocio aguanta."; }
+    else { pMetric.style.color = "var(--red)"; pElement.className = "negative"; document.getElementById("statusText").innerText = "⚠️ PELIGRO: El costo del dinero se está comiendo tu ganancia."; }
+
+    document.getElementById("m_roi").innerText = roi.toFixed(1) + "%";
+    document.getElementById("m_roi").style.color = roi > 20 ? "var(--green)" : "var(--red)";
+
+    updateChart(purchaseDown, rehabGap, pointsCost + closingFeesEst, loanAmt);
+}
+
+function updateChart(down, gap, fees, loan) {
+    const ctx = document.getElementById('flipChart').getContext('2d');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Tu Pronto', 'Tu Parte Rehab', 'Gastos Cierre/Points', 'Dinero del Banco'],
+            datasets: [{
+                data: [down, gap, fees, loan],
+                backgroundColor: ['#ff8800', '#ffaa44', '#cc6600', '#222'],
+                borderWidth: 0
+            }]
+        },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } } }
+    });
+}
+
+calc();
+</script>
+</body>
+</html>

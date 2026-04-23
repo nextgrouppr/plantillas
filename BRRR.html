@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRRRR Master Strategy v7.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #050505; --card: #111; --border: #222; --accent: #8a2be2;
+            --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; font-size: 14px; }
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        
+        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; height: fit-content; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; }
+        .metric-val { font-size: 24px; font-weight: 900; display: block; margin-top: 5px; }
+        .metric-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
+        
+        .main-box { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; margin-bottom: 20px; }
+        .chart-container { height: 280px; position: relative; }
+
+        .row-flex { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        .total-row { font-size: 1.3rem; font-weight: 900; border-top: 2px solid #333; margin-top: 10px; padding-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <span class="section-title">1. Fase Buy & Rehab (Cash)</span>
+        <div class="input-group"><label>Precio de Compra</label><input id="price" type="number" value="150000" oninput="calc()"></div>
+        <div class="input-group"><label>Remodelación / Rehab</label><input id="rehab" type="number" value="40000" oninput="calc()"></div>
+        <div class="input-group"><label>Gastos Cierre Inicial %</label><input id="buy_close_pct" type="number" value="3" oninput="calc()"></div>
+
+        <span class="section-title">2. Fase Rent & Refi</span>
+        <div class="input-group"><label>NUEVO VALOR (ARV)</label><input id="arv" type="number" value="260000" oninput="calc()" style="color:var(--accent); border-color:var(--accent);"></div>
+        <div class="input-group"><label>RENTA ESTIMADA</label><input id="rent" type="number" value="2100" oninput="calc()" style="color:var(--green); border-color:var(--green);"></div>
+        
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>% Refi (LTV)</label><input id="ltv" type="number" value="75" oninput="calc()"></div>
+            <div class="input-group"><label>Interés Refi %</label><input id="rate" type="number" value="7.0" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">3. Gastos Operativos Mensuales</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Seguros/CRIM</label><input id="escrow" type="number" value="220" oninput="calc()"></div>
+            <div class="input-group"><label>Mantenim. %</label><input id="maint_pct" type="number" value="10" oninput="calc()"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="metric-card"><span class="metric-label">Cash Inicial Puesto</span><span id="m_total_invest" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">Dinero Recuperado</span><span id="m_recovered" class="metric-val" style="color:var(--green)">--</span></div>
+            <div class="metric-card"><span class="metric-label">Capital Atrapado</span><span id="m_left_in" class="metric-val">--</span></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+            <div class="main-box">
+                <span class="section-title">Análisis de la Estrategia BRRRR</span>
+                
+                <div class="row-flex"><span>Inversión Total Cash:</span> <b id="r_invested">--</b></div>
+                <div class="row-flex"><span class="positive">(+) Nuevo Préstamo (${v('ltv')}% LTV):</span> <b class="positive" id="r_new_loan">--</b></div>
+                <hr>
+                <div class="row-flex" style="font-size: 1.1rem;"><span>Efectivo devuelto al bolsillo:</span> <b id="r_cash_back">--</b></div>
+                
+                <hr>
+                <span class="section-title">Cash Flow Post-Refinanciamiento</span>
+                <div class="row-flex"><span>(+) Renta Mensual:</span> <b class="positive" id="r_rent">--</b></div>
+                <div class="row-flex"><span class="negative">(-) Nueva Hipoteca (P&I):</span> <span class="negative" id="r_pi">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Seguros / CRIM:</span> <span class="negative" id="r_escrow">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Mantenimiento/Vacancia:</span> <span class="negative" id="r_maint">--</span></div>
+                
+                <div class="row-flex total-row">
+                    <span>CASH FLOW FINAL:</span> 
+                    <span id="r_cf">--</span>
+                </div>
+            </div>
+
+            <div class="main-box">
+                <span class="section-title">Situación del Capital</span>
+                <div class="chart-container">
+                    <canvas id="brrrrChart"></canvas>
+                </div>
+                <hr>
+                <div class="row-flex"><span>ROI de Capital Atrapado:</span> <b id="r_roi" class="positive">--%</b></div>
+            </div>
+        </div>
+
+        <div class="main-box" style="padding: 15px 25px; border-left: 5px solid var(--accent);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusText" style="font-weight:bold; font-size:0.9rem;">Analizando ciclo BRRRR...</span>
+                <span style="color:var(--subtext)">Años para recuperar capital atrapado: <b id="r_recovery" style="color:#fff">--</b></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chart = null;
+
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+function f(n){ return "$" + n.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function calc() {
+    // 1. Inversión inicial (Compra Cash + Rehab)
+    const price = v("price");
+    const rehab = v("rehab");
+    const buyClosing = price * (v("buy_close_pct")/100);
+    const totalInvested = price + rehab + buyClosing;
+
+    // 2. Refinanciamiento
+    const arv = v("arv");
+    const newLoan = arv * (v("ltv")/100);
+    const refiClosing = newLoan * 0.03; // Gastos de cierre del nuevo préstamo
+    const cashRecovered = newLoan - refiClosing;
+    const capitalLeftInDeal = totalInvested - cashRecovered;
+
+    // 3. Flujo de Caja Post-Refi
+    const rent = v("rent");
+    const rate = (v("rate")/100)/12;
+    const pi = newLoan > 0 ? (newLoan * rate * Math.pow(1+rate, 360)) / (Math.pow(1+rate, 360) - 1) : 0;
+    const escrow = v("escrow");
+    const maint = rent * (v("maint_pct")/100);
+    const cf = rent - pi - escrow - maint;
+
+    // --- UI UPDATES ---
+    document.getElementById("m_total_invest").innerText = f(totalInvested);
+    document.getElementById("m_recovered").innerText = f(cashRecovered);
+    
+    const leftElement = document.getElementById("m_left_in");
+    leftElement.innerText = capitalLeftInDeal > 0 ? f(capitalLeftInDeal) : "$0 (Infinite)";
+    leftElement.style.color = capitalLeftInDeal <= 0 ? "var(--green)" : "var(--text)";
+
+    document.getElementById("r_invested").innerText = f(totalInvested);
+    document.getElementById("r_new_loan").innerText = f(newLoan);
+    document.getElementById("r_cash_back").innerText = f(cashRecovered);
+    document.getElementById("r_rent").innerText = f(rent);
+    document.getElementById("r_pi").innerText = "-" + f(pi);
+    document.getElementById("r_escrow").innerText = "-" + f(escrow);
+    document.getElementById("r_maint").innerText = "-" + f(maint);
+    
+    // Cash Flow Neto (Color)
+    const cfElement = document.getElementById("r_cf");
+    cfElement.innerText = f(cf);
+    cfElement.className = cf >= 1000 ? "positive" : (cf > 0 ? "" : "negative");
+
+    // Métricas de éxito
+    const recoveryPct = (cashRecovered / totalInvested) * 100;
+    const status = document.getElementById("statusText");
+    const roiElement = document.getElementById("r_roi");
+
+    if(recoveryPct >= 100) {
+        status.innerText = "💎 ¡BRRRR PERFECTO! Has recuperado todo tu capital.";
+        status.style.color = "var(--green)";
+        roiElement.innerText = "INFINITO";
+    } else if(recoveryPct >= 80) {
+        status.innerText = "✅ EXCELENTE CICLO: Muy poco capital atrapado.";
+        status.style.color = "var(--yellow)";
+        roiElement.innerText = ((cf * 12 / capitalLeftInDeal) * 100).toFixed(1) + "%";
+    } else {
+        status.innerText = "⚠️ RECOMIENDO REVISAR: Mucho capital atrapado en el deal.";
+        status.style.color = "var(--red)";
+        roiElement.innerText = ((cf * 12 / capitalLeftInDeal) * 100).toFixed(1) + "%";
+    }
+
+    const recYears = (cf > 0 && capitalLeftInDeal > 0) ? (capitalLeftInDeal / (cf * 12)) : 0;
+    document.getElementById("r_recovery").innerText = recYears > 0 ? recYears.toFixed(1) + " Años" : "N/A";
+
+    updateChart(cashRecovered, capitalLeftInDeal > 0 ? capitalLeftInDeal : 0);
+}
+
+function updateChart(recovered, left) {
+    const ctx = document.getElementById('brrrrChart').getContext('2d');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Capital Recuperado', 'Capital Atrapado'],
+            datasets: [{
+                data: [recovered, left],
+                backgroundColor: ['#00ff88', '#333'],
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#888' } } } 
+        }
+    });
+}
+
+calc();
+</script>
+</body>
+</html>
