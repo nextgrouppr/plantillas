@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RE Master v5.5 - Pro Financial Status</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #050505; --card: #111; --border: #222; --accent: #0070f3;
+            --green: #00ff88; --red: #ff4d4d; --yellow: #ffcc00; --text: #eaeaea; --subtext: #888;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; font-size: 14px; }
+        .wrapper { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; }
+        
+        .sidebar { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; height: fit-content; }
+        .section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--subtext); margin-bottom: 15px; display: block; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 11px; margin-bottom: 5px; color: var(--subtext); font-weight: bold; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 12px; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .metric-card { background: var(--card); border: 1px solid var(--border); padding: 15px; border-radius: 12px; text-align: center; }
+        .metric-val { font-size: 24px; font-weight: 900; display: block; margin-top: 5px; }
+        .metric-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); letter-spacing: 1px; }
+        
+        .main-box { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 16px; margin-bottom: 20px; }
+        .chart-container { height: 280px; position: relative; }
+
+        .row-flex { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1a1a1a; }
+        .positive { color: var(--green); }
+        .negative { color: var(--red); }
+        .warning { color: var(--yellow); }
+        
+        hr { border: 0; border-top: 1px solid #333; margin: 15px 0; }
+        .total-row { font-size: 1.3rem; font-weight: 900; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <span class="section-title">Ingresos Brutos</span>
+        <div class="input-group">
+            <label>RENTA MENSUAL TOTAL ($)</label>
+            <input id="grossIncome" type="number" value="2500" oninput="calc()" style="border-color: var(--green); color: var(--green); font-weight: bold;">
+        </div>
+
+        <span class="section-title">Costos de Adquisición</span>
+        <div class="input-group"><label>Precio de Compra</label><input id="price" type="number" value="180000" oninput="calc()"></div>
+        <div class="input-group"><label>Remodelación / Rehab</label><input id="rehab" type="number" value="20000" oninput="calc()"></div>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Pronto %</label><input id="down" type="number" value="20" oninput="calc()"></div>
+            <div class="input-group"><label>Interés %</label><input id="rate" type="number" value="7.5" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">Gastos Fijos (Monthly)</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="input-group"><label>Hazard</label><input id="hazard" type="number" value="100" oninput="calc()"></div>
+            <div class="input-group"><label>CRIM</label><input id="crim" type="number" value="120" oninput="calc()"></div>
+        </div>
+
+        <span class="section-title">Reservas Operativas %</span>
+        <div class="grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
+            <div class="input-group"><label>Vacancia</label><input id="vac_pct" type="number" value="5" oninput="calc()"></div>
+            <div class="input-group"><label>Maint.</label><input id="maint_pct" type="number" value="5" oninput="calc()"></div>
+            <div class="input-group"><label>Mgmt.</label><input id="mgmt_pct" type="number" value="10" oninput="calc()"></div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="dashboard-grid">
+            <div class="metric-card"><span class="metric-label">Inversión Total</span><span id="m_total_invest" class="metric-val" style="color:#fff">--</span></div>
+            <div class="metric-card"><span class="metric-label">Cash Flow Mensual</span><span id="m_cf" class="metric-val">--</span></div>
+            <div class="metric-card"><span class="metric-label">Recuperación</span><span id="m_recovery" class="metric-val">--</span></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px;">
+            <div class="main-box">
+                <span class="section-title">Estado de Resultados Mensual</span>
+                
+                <div class="row-flex"><span>(+) Ingreso Bruto:</span> <b class="positive" id="r_gross">--</b></div>
+                
+                <div class="row-flex"><span class="negative">(-) Vacancia:</span> <span class="negative" id="r_vac">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Mantenimiento:</span> <span class="negative" id="r_maint">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Prop. Management:</span> <span class="negative" id="r_mgmt">--</span></div>
+                <div class="row-flex"><span class="negative">(-) Seguros / CRIM:</span> <span class="negative" id="r_escrow">--</span></div>
+                
+                <hr>
+                <div class="row-flex" style="font-weight:bold;"><span>Net Operating Income (NOI):</span> <b id="r_noi">--</b></div>
+                <div class="row-flex"><span class="negative">(-) Hipoteca (P&I):</span> <span class="negative" id="r_pi">--</span></div>
+                
+                <div class="row-flex total-row">
+                    <span>CASH FLOW NETO:</span> 
+                    <span id="r_cf">--</span>
+                </div>
+            </div>
+
+            <div class="main-box">
+                <span class="section-title">Distribución del Dólar</span>
+                <div class="chart-container">
+                    <canvas id="rentChart"></canvas>
+                </div>
+                <hr>
+                <div class="row-flex"><span>ROI Anual (CoC):</span> <b id="r_coc" class="positive">--%</b></div>
+            </div>
+        </div>
+
+        <div class="main-box" style="padding: 15px 25px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusText" style="font-weight:bold; font-size:0.9rem;">Analizando viabilidad...</span>
+                <span id="annual_cf_label" style="color:var(--subtext)">Cash Flow Anual: <b id="r_annual_cf" style="color:#fff">--</b></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chart = null;
+
+function v(id){ return parseFloat(document.getElementById(id).value)||0; }
+function f(n){ return "$" + n.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+
+function calc() {
+    const grossIncome = v("grossIncome");
+    const price = v("price");
+    const rehab = v("rehab");
+    const downAmt = price * (v("down")/100);
+    const loan = price - downAmt;
+    const rate = (v("rate")/100)/12;
+    const closingCosts = price * 0.04;
+    
+    // 1. Hipoteca P&I
+    const pi = loan > 0 ? (loan * rate * Math.pow(1+rate, 360)) / (Math.pow(1+rate, 360) - 1) : 0;
+    
+    // 2. Gastos (Todo en negativo para lógica visual)
+    const vac = grossIncome * (v("vac_pct")/100);
+    const maint = grossIncome * (v("maint_pct")/100);
+    const mgmt = grossIncome * (v("mgmt_pct")/100);
+    const escrow = v("hazard") + v("crim");
+    
+    const noi = grossIncome - (vac + maint + mgmt + escrow);
+    const cashFlow = noi - pi;
+    const annualCF = cashFlow * 12;
+
+    // 3. Inversión y Recuperación
+    const totalInvested = downAmt + rehab + closingCosts;
+    const recoveryYears = annualCF > 0 ? (totalInvested / annualCF) : 0;
+    const coc = totalInvested > 0 ? (annualCF / totalInvested) * 100 : 0;
+
+    // --- ACTUALIZACIÓN DE INTERFAZ ---
+
+    // Dashboard e Inversión
+    document.getElementById("m_total_invest").innerText = f(totalInvested);
+    document.getElementById("r_gross").innerText = f(grossIncome);
+    document.getElementById("r_vac").innerText = "-" + f(vac);
+    document.getElementById("r_maint").innerText = "-" + f(maint);
+    document.getElementById("r_mgmt").innerText = "-" + f(mgmt);
+    document.getElementById("r_escrow").innerText = "-" + f(escrow);
+    document.getElementById("r_noi").innerText = f(noi);
+    document.getElementById("r_pi").innerText = "-" + f(pi);
+    document.getElementById("r_annual_cf").innerText = f(annualCF);
+    document.getElementById("r_coc").innerText = coc.toFixed(1) + "%";
+
+    // Lógica Cash Flow Neto (Color)
+    const cfElement = document.getElementById("r_cf");
+    const cfMetric = document.getElementById("m_cf");
+    cfElement.innerText = f(cashFlow);
+    cfMetric.innerText = f(cashFlow);
+    
+    if(cashFlow >= 1000) {
+        cfElement.className = "positive";
+        cfMetric.style.color = "var(--green)";
+    } else {
+        cfElement.className = "negative";
+        cfMetric.style.color = "var(--red)";
+    }
+
+    // Lógica Recuperación (Semáforo)
+    const recElement = document.getElementById("m_recovery");
+    recElement.innerText = recoveryYears > 0 ? recoveryYears.toFixed(1) + " Años" : "∞";
+    
+    if(recoveryYears > 0 && recoveryYears < 3) {
+        recElement.style.color = "var(--green)";
+        document.getElementById("statusText").innerText = "🚀 DEAL INCREÍBLE: Recuperación ultrarrápida.";
+    } else if(recoveryYears >= 3 && recoveryYears <= 4) {
+        recElement.style.color = "var(--yellow)";
+        document.getElementById("statusText").innerText = "✅ GRAN OPORTUNIDAD: Retorno sólido.";
+    } else {
+        recElement.style.color = "var(--red)";
+        document.getElementById("statusText").innerText = "🏠 INVERSIÓN ESTÁNDAR: Enfoque a largo plazo.";
+    }
+
+    updateChart(pi, escrow, (vac+maint+mgmt), cashFlow);
+}
+
+function updateChart(pi, escrow, opex, cf) {
+    const ctx = document.getElementById('rentChart').getContext('2d');
+    if(chart) chart.destroy();
+    chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Banco (P&I)', 'Impuestos/Seguros', 'OpEx', 'Cash Flow'],
+            datasets: [{
+                data: [pi, escrow, opex, cf > 0 ? cf : 0],
+                backgroundColor: ['#0070f3', '#ff4d4d', '#555', '#00ff88'],
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 10 } } } } 
+        }
+    });
+}
+
+calc();
+</script>
+</body>
+</html>
